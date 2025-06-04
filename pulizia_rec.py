@@ -19,7 +19,7 @@ print(df.iloc[:,29].head(10))  # Stampo le prime 5 righe della colonna Coordinat
 #Stampando le prime righe della colonna Coordinate, vedo che ho assegnato il nome "Coordinate" alla colonna sbagliata. Lo cambio manualmente.
 
 #Rinomino le colonne
-df.columns = ["ID", "Codice", "Prodotto", "Data_prod", "Mix", "X", "Stabilimento", 
+df.columns = ["RecID", "Cod_prod", "Prodotto", "Data_prod", "Mix", "X", "Stabilimento", 
               "X", "X", "Danno", "Data_Fatt", "Fattura", "Data_rec", "Cod_cliente",
                "Stamp", "Data_stamp", "X", "X", "Provincia", "Regione", "Posa", "Area", 
                "X", "X", "Linea_Gronda", "X", "X", "Altitudine", "X", "X", "Coordinate", "X", "X", 
@@ -54,8 +54,8 @@ df["Mix"] = df["Mix"].str.replace("0", "ND", regex=False)
 print(df["Mix"])
 
 #ID
-df["ID"] = df["ID"].str.replace("_", "", regex=False)
-df["ID"] = df["ID"].str.replace(" ", "", regex=False)
+df["RecID"] = df["RecID"].str.replace("_", "", regex=False)
+df["RecID"] = df["RecID"].str.replace(" ", "", regex=False)
 
 #Prodotto
 df["Prodotto"] = df["Prodotto"].str.strip()
