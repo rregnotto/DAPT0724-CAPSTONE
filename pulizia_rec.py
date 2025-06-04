@@ -20,7 +20,7 @@ print(df.iloc[:,29].head(10))  # Stampo le prime 5 righe della colonna Coordinat
 
 #Rinomino le colonne
 df.columns = ["RecID", "Cod_prod", "Prodotto", "Data_prod", "Mix", "X", "Stabilimento", 
-              "X", "X", "Danno", "Data_Fatt", "Fattura", "Data_rec", "Cod_cliente",
+              "X", "X", "Danno", "Data_fatt", "Fattura", "Data_rec", "Cod_cliente",
                "Stamp", "Data_stamp", "X", "X", "Provincia", "Regione", "Posa", "Area", 
                "X", "X", "Linea_Gronda", "X", "X", "Altitudine", "X", "X", "Coordinate", "X", "X", 
                "X", "X", "X"]
@@ -36,7 +36,7 @@ df = df.drop(columns = ["X", "Data_stamp"])
 print(df.columns)
 
 #Converto in formato date le colonne con data
-date_col = ["Data_prod", "Data_Fatt", "Data_rec"]
+date_col = ["Data_prod", "Data_fatt", "Data_rec"]
 
 for col in date_col:
     df[col] = pd.to_datetime(df[col], errors='coerce').dt.date
