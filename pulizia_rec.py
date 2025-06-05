@@ -2,6 +2,8 @@ import pandas as pd
 import os
 import numpy as np
 import csv
+import random
+from faker import Faker
 
 path = "C:\\Users\\franc\\OneDrive\\Desktop\\Workspace\\capstone"
 file = os.path.join(path, "reclami.xlsx")
@@ -28,11 +30,11 @@ print(df.columns)
 
 #Converto e salvo il file excel in csv
 csv_path = os.path.join(path, "reclami.csv")
-df.to_csv(csv_path, index=False, sep=";", quoting=csv.QUOTE_ALL) #csv.QUOTE_ALL per gestire il problemma della colonna coordinate
+df.to_csv(csv_path, index=False, sep=";", quoting=csv.QUOTE_ALL) #csv.QUOTE_ALL per gestire il problema della colonna coordinate
 print(df.shape)
 
 #Rimuovo le colonne non necessarie
-df = df.drop(columns = ["X", "Data_stamp"])
+df = df.drop(columns = ["X", "Area", "Stamp", "Data_stamp"])
 print(df.columns)
 
 #Converto in formato date le colonne con data
@@ -81,6 +83,7 @@ df["Cod_cliente"] = df["Cod_cliente"].str.replace("00", "ND", regex=False)
 
 #Stabilimento
 df["Stabilimento"] = df["Stabilimento"].str.strip()
+
 #Posa
 df["Posa"] = df["Posa"].str.strip()
 df["Posa"] = df["Posa"].str.lower()
@@ -89,10 +92,6 @@ df["Posa"] = df["Posa"].str.replace("0", "ND")
 
 #Sostituisco gli spazi interni con _
 df = df.apply(lambda x: x.str.replace(" ", "_", regex=False) if x.dtype == "str" else x)
-
-#Stamp
-df["Stamp"] = df["Stamp"].str.strip()
-df["Stamp"] = df["Stamp"].str.replace(" ", "", regex=False)
 
 #Provincia
 df["Provincia"] = df["Provincia"].str.strip()
@@ -124,7 +123,7 @@ def extract_coordinates(val):
         return None, None
 
 # Applica la funzione riga per riga
-df[["latitudine", "longitudine"]] = df["Coordinate"].apply(lambda x: pd.Series(extract_coordinates(x)))
+df[["Latitudine", "Longitudine"]] = df["Coordinate"].apply(lambda x: pd.Series(extract_coordinates(x)))
 
 # Controllo
 print(df[["Coordinate"]].head())
@@ -132,6 +131,23 @@ print(df[["Coordinate"]].head())
 #Sostituzione dei valori nulli o 0 con ND
 
 df = df.replace([np.nan, 0, 0.0, "0", "0.0"], "ND")
+
+#Dato che i dati sono in maggiorparte fittizi, manipolo i dati di alcune colonne per migliorare la consistenza dei dati
+
+#Popolo tutte le righe della colonna Cod_cliente con un valore fittizio (uso la libreria Faker)
+fake = Faker("it_IT") #uso la localizzazione italiana
+df["Cod_cliente"] = [fake.unique.bothify(text = "CL####") for _ in range(len(df))]
+print(df["Cod_cliente"].head())
+
+#Popolo la colonna Danno con 3 tipologie di danno, in modo casuale
+danno = ["Sfaldatura", "Rottura", "Delaminazione"]
+df["Danno"] = np.random.choice(danno, size=len(df))
+
+#Completo le celle vuote della colonna Mix con delle miscele aggiuntive
+mix = ["V16", "V32AR", "V31", "V34CAM", "N59"]
+mask = df["Mix"] == "ND" #uso una maschera booleana
+df.loc[mask, "Mix"] = np.random.choice(mix, size=mask.sum()) #assegno un mix casuale alle celle della maschera
+
 
 #Salvo il file csv pulito
 file_csv = "rec_clean.csv"
