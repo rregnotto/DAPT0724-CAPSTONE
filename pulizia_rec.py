@@ -3,6 +3,8 @@ import os
 import numpy as np
 import csv
 import random
+import datetime
+from datetime import timedelta
 from faker import Faker
 
 path = "C:\\Users\\franc\\OneDrive\\Desktop\\Workspace\\capstone"
@@ -76,6 +78,30 @@ df["Fattura"] = df["Fattura"].str.replace("_", "")
 df["Fattura"] = df["Fattura"].str.replace(" ", "", regex=False)
 #df["Fattura"] = df["Fattura"].str.replace("0", "ND", regex=False)
 
+#Data_fatt: sostituisco i valori "1970-01-01" con date casuali tra il 2004 e il 2024
+mask = df["Data_fatt"] == datetime.date(1970, 1, 1)
+
+# Sostituisco solo i valori selezionati con date casuali
+fake = Faker("it_IT") 
+# Genero date casuali tra il 2004 e il 2024 per le righe che soddisfano la maschera
+df.loc[mask, "Data_fatt"] = [
+    fake.date_between(start_date=datetime.date(2004, 1, 1), end_date=datetime.date(2024, 12, 31)) 
+    for _ in range(mask.sum())
+    ]
+df["Data_fatt"] = pd.to_datetime(df["Data_fatt"]).dt.date
+
+#Data_rec: sostituisco i valori "1970-01-01" con date casuali tra il 2004 e il 2024
+mask = df["Data_rec"] == datetime.date(1970, 1, 1)
+
+# Sostituisco solo i valori selezionati con date casuali
+fake = Faker("it_IT") 
+# Genero date casuali tra il 2004 e il 2024 per le righe che soddisfano la maschera
+df.loc[mask, "Data_rec"] = [
+    fake.date_between(start_date=datetime.date(2004, 1, 1), end_date=datetime.date(2024, 12, 31)) 
+    for _ in range(mask.sum())
+    ]
+df["Data_rec"] = pd.to_datetime(df["Data_rec"]).dt.date
+
 #Cod_cliente
 df["Cod_cliente"] = df["Cod_cliente"].astype(str)
 df["Cod_cliente"] = df["Cod_cliente"].str.replace(".", "", regex=False)
@@ -139,6 +165,7 @@ fake = Faker("it_IT") #uso la localizzazione italiana
 df["Cod_cliente"] = [fake.unique.bothify(text = "CL####") for _ in range(len(df))]
 print(df["Cod_cliente"].head())
 
+
 #Popolo la colonna Danno con 3 tipologie di danno, in modo casuale
 danno = ["Sfaldatura", "Rottura", "Delaminazione"]
 df["Danno"] = np.random.choice(danno, size=len(df))
@@ -148,8 +175,34 @@ mix = ["V16", "V32AR", "V31", "V34CAM", "N59"]
 mask = df["Mix"] == "ND" #uso una maschera booleana
 df.loc[mask, "Mix"] = np.random.choice(mix, size=mask.sum()) #assegno un mix casuale alle celle della maschera
 
+#Creo le nuove colonne per la dimensione cliente
+#"contatto", "Impresa", "Telefono", "Email"
+df["Contatto"] = [fake.name() for _ in range(len(df))]
+df["Impresa"] = [fake.company() for _ in range(len(df))]
+df["Telefono"] = [fake.phone_number() for _ in range(len(df))]
+df["Email"] = [fake.email() for _ in range(len(df))]
 
-#Salvo il file csv pulito
+##Creo le nuove colonne per la tabella reclami
+#"Status", "Data_risoluzione"
+status = ["In attesa", "In lavorazione", "Risolto", "Chiuso"]
+df["Status"] = np.random.choice(status, size=len(df))
+df["Data_ris"] = [
+    fake.date_between(
+        start_date=datetime.date(2004, 1, 1), 
+        end_date=datetime.date(2024, 12, 31))
+        for _ in range(len(df))
+]
+df["Data_ris"] = pd.to_datetime(df["Data_ris"]).dt.date
+
+#Per rendere veritieri i dati, faccio in modo che Data_ris sia successiva a Data_rec
+# Aggiungo da 7 a 90 giorni a Data_rec
+df["Data_rec"] = pd.to_datetime(df["Data_rec"], errors="coerce").dt.date
+
+df["Data_ris"] = df["Data_rec"].apply(
+    lambda x: x + timedelta(days=random.randint(7, 90)) if pd.notnull(x) else "ND"
+)
+
+#Salvo il file csv pulito e sistemato
 file_csv = "rec_clean.csv"
 rec_clean = os.path.join(path, file_csv)
 df.to_csv(rec_clean, index=False)
