@@ -201,6 +201,21 @@ df["Data_rec"] = pd.to_datetime(df["Data_rec"], errors="coerce").dt.date
 df["Data_ris"] = df["Data_rec"].apply(
     lambda x: x + timedelta(days=random.randint(7, 90)) if pd.notnull(x) else "ND"
 )
+#Faccio la stessa operazione per Data_fatt, in modo che sia sempre postumo a Data_prod
+df["Data_prod"] = pd.to_datetime(df["Data_prod"], errors="coerce").dt.date
+
+df["Data_fatt"] = df["Data_prod"].apply(
+    lambda x: x + timedelta(days=random.randint(7, 90)) if pd.notnull(x) else "ND"
+)
+
+#Per ottimizzare il database e le seguenti relazioni tra tabelle, creo un ID univoco per i codici prodotto uguali ma prodotto in anni diversi
+df["Data_prod"]= pd.to_datetime(df["Data_prod"])
+#Estraggo l'anno di produzione
+df["Anno_prod"] = df["Data_prod"].dt.year.astype('Int64')
+
+#Combino cod_prod e anno_prod per creare un ID univoco
+df['Cod_prod_uni'] = df['Cod_prod'] + "_" + df['Anno_prod'].astype(str)
+
 
 #Salvo il file csv pulito e sistemato
 file_csv = "rec_clean.csv"
