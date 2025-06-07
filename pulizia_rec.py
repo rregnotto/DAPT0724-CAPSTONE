@@ -158,7 +158,7 @@ print(df[["Coordinate"]].head())
 
 df = df.replace([np.nan, 0, 0.0, "0", "0.0"], "ND")
 
-#Dato che i dati sono in maggiorparte fittizi, manipolo i dati di alcune colonne per migliorare la consistenza dei dati
+#Dato che i dati sono in maggiorparte fittizi, manipolo i dati di alcune colonne per migliorarne la consistenza
 
 #Popolo tutte le righe della colonna Cod_cliente con un valore fittizio (uso la libreria Faker)
 fake = Faker("it_IT") #uso la localizzazione italiana
@@ -194,13 +194,20 @@ df["Data_ris"] = [
 ]
 df["Data_ris"] = pd.to_datetime(df["Data_ris"]).dt.date
 
-#Per rendere veritieri i dati, faccio in modo che Data_ris sia successiva a Data_rec
-# Aggiungo da 7 a 90 giorni a Data_rec
-df["Data_rec"] = pd.to_datetime(df["Data_rec"], errors="coerce").dt.date
 
-df["Data_ris"] = df["Data_rec"].apply(
-    lambda x: x + timedelta(days=random.randint(7, 90)) if pd.notnull(x) else "ND"
+#Per rendere veritieri i dati, faccio in modo che Data_ris sia successiva a Data_rec
+#Mi assicuro che per i reclami "In lavorazione" non ci sia una data di risoluzione
+
+df["Data_rec"] = pd.to_datetime(df["Data_rec"], errors="coerce")
+
+# Solo per reclami non "In lavorazione", assegna una data di risoluzione dopo Data_rec
+df["Data_ris"] = df.apply(
+    lambda row: row["Data_rec"] + timedelta(days=random.randint(7, 90)) # Aggiungo da 7 a 90 giorni a Data_rec
+    if row["Status"] != "In lavorazione" and pd.notnull(row["Data_rec"]) 
+    else pd.NaT,
+    axis=1
 )
+
 #Faccio la stessa operazione per Data_fatt, in modo che sia sempre postumo a Data_prod
 df["Data_prod"] = pd.to_datetime(df["Data_prod"], errors="coerce").dt.date
 
